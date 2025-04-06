@@ -5,6 +5,8 @@ import chalk from "chalk";
 import fs from "fs-extra";
 import path from "path";
 import { fileURLToPath } from "url";
+import Handlebars from "handlebars";
+import { execSync } from "child_process";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -79,6 +81,13 @@ async function promptUser() {
       message: "Repository URL:",
       default: "",
     },
+    {
+      type: "list",
+      name: "packageManager",
+      message: "Which package manager do you want to use?",
+      choices: ["pnpm", "npm", "yarn"],
+      default: "pnpm",
+    },
   ]);
 
   // Add the kebab-case version of the project name
@@ -129,6 +138,7 @@ async function init() {
       description,
       keywords,
       repositoryUrl,
+      packageManager,
     } = answers;
 
     // Create the project directory
@@ -147,7 +157,280 @@ async function init() {
       fs.mkdirSync(path.join(projectPath, dir), { recursive: true });
     });
 
-    console.log(chalk.green("\nSuccess!"));
+    // Create package.json from template
+    const templateDir = path.join(__dirname, "..", "templates");
+
+    // Load and compile the package.json template
+    const packageJsonTemplatePath = path.join(templateDir, "package.json.hbs");
+    const packageJsonTemplateContent = fs.readFileSync(
+      packageJsonTemplatePath,
+      "utf-8"
+    );
+    const packageJsonTemplate = Handlebars.compile(packageJsonTemplateContent);
+
+    // Prepare template data
+    const templateData = {
+      name: projectNameKebab,
+      description,
+      author: authorName,
+      keywords,
+      repository: repositoryUrl,
+    };
+
+    // Generate package.json content
+    const packageJsonContent = packageJsonTemplate(templateData);
+
+    // Write package.json to project directory
+    fs.writeFileSync(
+      path.join(projectPath, "package.json"),
+      packageJsonContent
+    );
+
+    console.log(chalk.green("Created package.json"));
+
+    // Create vite.config.ts from template
+    const viteConfigTemplatePath = path.join(templateDir, "vite.config.ts.hbs");
+    const viteConfigTemplateContent = fs.readFileSync(
+      viteConfigTemplatePath,
+      "utf-8"
+    );
+    const viteConfigTemplate = Handlebars.compile(viteConfigTemplateContent);
+
+    // Generate vite.config.ts content
+    const viteConfigContent = viteConfigTemplate({
+      name: projectName, // Using the original project name for the library name in vite config
+    });
+
+    // Write vite.config.ts to project directory
+    fs.writeFileSync(
+      path.join(projectPath, "vite.config.ts"),
+      viteConfigContent
+    );
+
+    console.log(chalk.green("Created vite.config.ts"));
+
+    // Create core/index.ts from template
+    const coreIndexTsTemplatePath = path.join(templateDir, "core.index.ts.hbs");
+    const coreIndexTsTemplateContent = fs.readFileSync(
+      coreIndexTsTemplatePath,
+      "utf-8"
+    );
+    const coreIndexTsTemplate = Handlebars.compile(coreIndexTsTemplateContent);
+
+    // Generate core/index.ts content
+    const coreIndexTsContent = coreIndexTsTemplate({
+      name: projectName,
+    });
+
+    // Write core/index.ts to src/core directory
+    fs.writeFileSync(
+      path.join(projectPath, "src", "core", "index.ts"),
+      coreIndexTsContent
+    );
+
+    console.log(chalk.green("Created src/core/index.ts"));
+
+    // Create types/index.ts from template
+    const typesIndexTsTemplatePath = path.join(
+      templateDir,
+      "types.index.ts.hbs"
+    );
+    const typesIndexTsTemplateContent = fs.readFileSync(
+      typesIndexTsTemplatePath,
+      "utf-8"
+    );
+    const typesIndexTsTemplate = Handlebars.compile(
+      typesIndexTsTemplateContent
+    );
+
+    // Generate types/index.ts content
+    const typesIndexTsContent = typesIndexTsTemplate({
+      name: projectName,
+    });
+
+    // Write types/index.ts to src/types directory
+    fs.writeFileSync(
+      path.join(projectPath, "src", "types", "index.ts"),
+      typesIndexTsContent
+    );
+
+    console.log(chalk.green("Created src/types/index.ts"));
+
+    // Create README.md from template
+    const readmeMdTemplatePath = path.join(templateDir, "README.md.hbs");
+    const readmeMdTemplateContent = fs.readFileSync(
+      readmeMdTemplatePath,
+      "utf-8"
+    );
+    const readmeMdTemplate = Handlebars.compile(readmeMdTemplateContent);
+
+    // Generate README.md content
+    const readmeMdContent = readmeMdTemplate({
+      name: projectNameKebab,
+      description,
+      author: authorName,
+    });
+
+    // Write README.md to project root
+    fs.writeFileSync(path.join(projectPath, "README.md"), readmeMdContent);
+
+    console.log(chalk.green("Created README.md"));
+
+    // Create tsconfig.json from template
+    const tsconfigJsonTemplatePath = path.join(
+      templateDir,
+      "tsconfig.json.hbs"
+    );
+    const tsconfigJsonTemplateContent = fs.readFileSync(
+      tsconfigJsonTemplatePath,
+      "utf-8"
+    );
+    const tsconfigJsonTemplate = Handlebars.compile(
+      tsconfigJsonTemplateContent
+    );
+
+    // Generate tsconfig.json content
+    const tsconfigJsonContent = tsconfigJsonTemplate({});
+
+    // Write tsconfig.json to project root
+    fs.writeFileSync(
+      path.join(projectPath, "tsconfig.json"),
+      tsconfigJsonContent
+    );
+
+    console.log(chalk.green("Created tsconfig.json"));
+
+    // Create main.ts from template
+    const srcMainTsTemplatePath = path.join(templateDir, "main.ts.hbs");
+    const srcMainTsTemplateContent = fs.readFileSync(
+      srcMainTsTemplatePath,
+      "utf-8"
+    );
+    const srcMainTsTemplate = Handlebars.compile(srcMainTsTemplateContent);
+
+    // Generate main.ts content
+    const srcMainTsContent = srcMainTsTemplate({
+      name: projectName,
+    });
+
+    // Write main.ts to src directory
+    fs.writeFileSync(
+      path.join(projectPath, "src", "main.ts"),
+      srcMainTsContent
+    );
+
+    console.log(chalk.green("Created src/main.ts"));
+
+    // Create .gitkeep file in utils directory
+    fs.writeFileSync(path.join(projectPath, "src", "utils", ".gitkeep"), "");
+
+    console.log(chalk.green("Created src/utils/.gitkeep"));
+
+    // Create test directory
+    fs.mkdirSync(path.join(projectPath, "test"), { recursive: true });
+
+    // Create test file for hello function
+    const testContent = `
+    import { describe, it, expect } from 'vitest';
+    import { hello } from '../src/main';
+
+    describe('hello', () => {
+      it('returns the correct greeting', () => {
+        expect(hello()).toBe('Hello from ${projectName}!');
+      });
+    });
+    `;
+
+    fs.writeFileSync(
+      path.join(projectPath, "test", "hello.test.ts"),
+      testContent
+    );
+
+    console.log(chalk.green("Created test/hello.test.ts"));
+
+    // Create .gitignore from template
+    const gitignoreTemplatePath = path.join(templateDir, ".gitignore.hbs");
+    const gitignoreTemplateContent = fs.readFileSync(
+      gitignoreTemplatePath,
+      "utf-8"
+    );
+    const gitignoreTemplate = Handlebars.compile(gitignoreTemplateContent);
+
+    // Generate .gitignore content
+    const gitignoreContent = gitignoreTemplate({});
+
+    // Write .gitignore to project root
+    fs.writeFileSync(path.join(projectPath, ".gitignore"), gitignoreContent);
+
+    console.log(chalk.green("Created .gitignore"));
+
+    // Install dependencies using the selected package manager
+    console.log(chalk.blue("\nInstalling dependencies..."));
+
+    const installCommands = {
+      npm: "npm install",
+      yarn: "yarn install",
+      pnpm: "pnpm install",
+    };
+
+    const installCommand = installCommands[packageManager];
+
+    try {
+      // Change to the project directory
+      process.chdir(projectPath);
+
+      // Run the install command
+      console.log(chalk.blue(`Running: ${installCommand}`));
+      execSync(installCommand, { stdio: "inherit" });
+
+      console.log(chalk.green("\nDependencies installed successfully!"));
+    } catch (installError) {
+      console.error(
+        chalk.yellow("\nCould not install dependencies automatically.")
+      );
+      console.log(
+        `You can install them manually by running: cd ${projectNameKebab} && ${installCommand}`
+      );
+    }
+
+    // Initialize Git repository
+    console.log(chalk.blue("\nInitializing Git repository..."));
+
+    try {
+      // Initialize Git repository
+      execSync("git init", { stdio: "inherit" });
+
+      // Add all files to staging
+      execSync("git add .", { stdio: "inherit" });
+
+      console.log(
+        chalk.green("\nGit repository initialized and files staged.")
+      );
+      console.log(
+        chalk.blue("You can now commit your changes and add a remote origin.")
+      );
+    } catch (gitError) {
+      console.error(chalk.yellow("\nCould not initialize Git repository."));
+      console.log(
+        "Make sure Git is installed and try running the following commands manually:"
+      );
+      console.log(`  cd ${projectNameKebab}`);
+      console.log("  git init");
+      console.log("  git add .");
+    }
+
+    console.log(chalk.green("\nSuccess! Your project is ready."));
+    console.log(
+      chalk.blue(`\nNext steps:
+  cd ${projectNameKebab}
+  ${packageManager} run dev
+
+To push to a remote repository:
+  git commit -m "Initial commit"
+  git remote add origin <your-repository-url>
+  git push -u origin main
+`)
+    );
   } catch (error) {
     console.error(chalk.red("Error:"), error);
   }
