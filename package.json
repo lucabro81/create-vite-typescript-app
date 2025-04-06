@@ -8,7 +8,7 @@
     "create-vite-typescript-app": "./bin/index.js"
   },
   "scripts": {
-    "publish": "pnpm publish",
+    "publish:prod": "pnpm publish",
     "publish:dry-run": "pnpm publish --dry-run"
   },
   "keywords": [
