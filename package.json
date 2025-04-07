@@ -37,12 +37,9 @@
   ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/yourusername/vite-typescript-app.git"
+    "url": "https://github.com/lucabro81/create-vite-typescript-app"
   },
-  "bugs": {
-    "url": "https://github.com/yourusername/vite-typescript-app/issues"
-  },
-  "homepage": "https://github.com/yourusername/vite-typescript-app#readme",
+  "homepage": "https://github.com/lucabro81/create-vite-typescript-app#readme",
   "publishConfig": {
     "access": "public"
   }
